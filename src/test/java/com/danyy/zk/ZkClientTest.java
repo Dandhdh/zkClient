@@ -98,6 +98,7 @@ public class ZkClientTest {
     public void close() {
         try {
             //需要阻塞是因为zkclient中的线程都是守护线程，当主线程结束时进程退出，所以要阻塞主线程。
+            // 所以在这里阻塞主线程，则其他线程可以继续进行操作，从而实现“监听”
             Thread.sleep(2 * 60 * 1000);
         } catch (InterruptedException e) {
             e.printStackTrace();

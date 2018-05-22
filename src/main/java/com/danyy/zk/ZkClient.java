@@ -28,7 +28,7 @@ public class ZkClient {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ZkClient.class);
 
-    //连接同步锁
+    //连接同步锁，并设置信号量为0
     private final Semaphore connLock = new Semaphore(0);
 
     //zookeeper  地址列表
@@ -75,6 +75,7 @@ public class ZkClient {
         this.hosts = hosts;
         this.sessionTimeout = sessionTimeout;
         this.connTimeout = connTimeout;
+        // 实例化观察对象zkWatcher，并传入锁（作为连接同步锁）
         watcher = new ZkWatcher(connLock, this);
         this.process = new WatcherProcess(this, watcherThreadSize);
         this.connection();
@@ -409,11 +410,12 @@ public class ZkClient {
      * @throws ZkClientException
      */
     private synchronized void connection() throws ZkClientException {
-        if (this.checkConnection()) {
+        if (this.checkConnection()) {  // 查看是否已建立其连接，
             throw new ZkClientException("Has been connected to the server, please do not repeat connection. host:" + hosts);
         }
         try {
-            // 缩减剩余通行次数为0，并返回缩减量，(阻塞其后的线程)
+            System.out.println("C");
+            // 返回现在可用的所有许可数目，随后并将许可数目设置为 0
             connLock.drainPermits();
             zk = new ZooKeeper(hosts, sessionTimeout, watcher);
         } catch (IOException e) {
@@ -421,9 +423,11 @@ public class ZkClient {
         }
         try {
             watcher.setWatcherProcess(process);
-            // 获取锁
+            // 尝试着获取锁,此时在此阻塞
+            // 直到zookeeper连接成功，触发watch的process，调用ZKWatcher类中的conlock.realse()函数，释放信号量，
+            // 才可以继续执行
             boolean isConn = connLock.tryAcquire(connTimeout, TimeUnit.MILLISECONDS);
-            // 获取锁失败，抛出异常并返回
+            // 在规定时间内，不能连接成功
             if (!isConn) {
                 zk.close();
                 LOGGER.warn("zookeeper connection timeout. host:{}", hosts);

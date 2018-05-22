@@ -183,7 +183,6 @@ public class WatcherProcess {
             try {
                 // 获取到当前最新的所有子节点，且重新设置 getChild的触发器watch
                 List<String> changeNodes = this.zkClient.getChild(path, true);
-                System.out.println("change : "+changeNodes.size());
                 // nodeListenerPool保存着的manager时上一步（zkCline.listen（））存入的，
                 // 触发器调用时不经过这一步
                 ListenerManager manager = nodeListenerPool.get(path);

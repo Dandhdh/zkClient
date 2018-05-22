@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -42,8 +43,14 @@ public class ZkWatcher implements Watcher, AsyncCallback.ChildrenCallback {
             case ConnectedReadOnly:
             case SyncConnected:
                 if (!zkClient.isConnection()) {
+                    //连接成功
                     zkClient.setIsConnection(true);
-                    connLock.release();//连接成功
+                    /**
+                     * 连接成功后释放Semaphore的许可，
+                     * 是的其他因为执行acquire()方法而阻塞的线程线程可以获取到许可，
+                     * 从而继续执行
+                     */
+                    connLock.release();
                     LOGGER.warn("Zookeeper connection or retry success......");
                     System.out.println("连接成功");
                 }
