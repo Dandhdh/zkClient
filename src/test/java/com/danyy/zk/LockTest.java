@@ -7,7 +7,7 @@ public class LockTest {
     public static void main(String[] args) throws InterruptedException {
         final ZkClient zk = new ZkClient("127.0.0.1:2181");
         // 获取到锁对象，这里默认为SimpleLock
-        final Lock lock = zk.getLock("/lock");
+        final Lock lock = zk.getLock("/lock/a/b");
         new Thread(new Runnable() {
             @Override
             public void run() {

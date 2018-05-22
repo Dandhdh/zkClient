@@ -28,6 +28,11 @@ public class ZkClient {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ZkClient.class);
 
+    /**
+     * 信号量又初始化为new Semaphore(0)，这个时候，他在子线程中并没有调用acquire，
+     * 而只在主线程中调用了acquire。主线程会阻塞。
+     * 所以子线程执行完后要调用release释放信号量，以便主线程能继续执行下去。
+     */
     //连接同步锁，并设置信号量为0
     private final Semaphore connLock = new Semaphore(0);
 

@@ -18,7 +18,9 @@ public class SimpleLock implements Lock {
     private final static Logger LOGGER = LoggerFactory.getLogger(SimpleLock.class);
     private final ThreadLocal<ReentrantState> currentLock = new ThreadLocal<ReentrantState>();
     private ZkClient client;
+    // 锁的目录
     private String lockPath = "/a";
+    // 锁目录下的路径分片
     private String seqPath;
     private LockListener lockListener;
     private static SimpleLock simpleLock = new SimpleLock();
@@ -42,6 +44,7 @@ public class SimpleLock implements Lock {
      * @param path
      */
     public synchronized void init(ZkClient client, String path) {
+        // 是否已经初始化
         if (isInit) {
             LOGGER.warn("Repeat init simpleLock.");
             return;
@@ -51,30 +54,34 @@ public class SimpleLock implements Lock {
             if (path.indexOf("/") == 0) {
                 this.lockPath = path;
             }
+            // 判断路径的结尾是不是"/"，然后响应地加上 /1
             if (path.lastIndexOf("/") != path.length() - 1) {
                 this.seqPath = this.lockPath + "/1";
             } else {
                 this.seqPath = this.lockPath + "1";
             }
         }
+        // 不存在路径的话，需要创建
         if (!client.exists(lockPath)) {
             this.client.create(lockPath, CreateMode.PERSISTENT);
         }
         List<String> nodes = client.getChild(this.lockPath, false);
+
         lockListener = new LockListener(nodes);
         client.listenChild(this.lockPath, lockListener);
+        // 监听状态的变化
         client.listenState(Watcher.Event.KeeperState.Expired, new StateListener() {
             @Override
             public void listen(Watcher.Event.KeeperState state) {
                 lockListener.interrupt();
             }
         });
+        // 初始化成功，设置标志
         isInit = true;
     }
 
     /**
      * 获得锁，一直等待，该锁不可重入
-     *
      * @return
      */
     @Override

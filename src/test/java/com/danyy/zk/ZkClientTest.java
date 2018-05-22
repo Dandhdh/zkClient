@@ -76,7 +76,7 @@ public class ZkClientTest {
 
     @Test
     public void lock() {
-        final Lock lock = zk.getLock("/zk/lock");//创建锁对象
+        final Lock lock = zk.getLock("/zk/lock"); //创建锁对象
         try {
             if (lock.lock(0)) {//获得锁
                 //处理业务

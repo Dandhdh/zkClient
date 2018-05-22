@@ -55,11 +55,13 @@ public class ZkWatcher implements Watcher, AsyncCallback.ChildrenCallback {
                     System.out.println("连接成功");
                 }
                 break;
-            case Expired://会话超时
+            //会话超时
+            case Expired:
                 this.stateChange(event.getState());
                 resetSession();
                 break;
-            case Disconnected://连接断开
+            //连接断开
+            case Disconnected:
                 zkClient.setIsConnection(false);
                 this.stateChange(event.getState());
                 LOGGER.warn("Zookeeper connection break......");
@@ -70,13 +72,16 @@ public class ZkWatcher implements Watcher, AsyncCallback.ChildrenCallback {
                 break;
         }
         switch (event.getType()) {
-            case NodeChildrenChanged: //子节点变化
-                System.out.println("子节点变化");
+            //子节点变化
+            case NodeChildrenChanged:
                 this.childChange(event.getPath());
                 break;
-            case NodeDataChanged: //节点数据变化
-                System.out.println("节点数据变化");
+            //节点数据变化
+            case NodeDataChanged:
                 this.dataChange(event.getPath());
+                break;
+                default:
+                    break;
         }
 
     }

@@ -5,8 +5,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 监听器回调线程工程类
- * Author: xiajun
- * Date: 14/5/20
  */
 public class ThreadProcessFactory implements ThreadFactory {
     private AtomicInteger count = new AtomicInteger(0);
