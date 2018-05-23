@@ -16,7 +16,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class SimpleLock implements Lock {
     private final static Logger LOGGER = LoggerFactory.getLogger(SimpleLock.class);
-    // 线程本地变量，ThreadLocal为变量在每个线程中都创建了一个副本，那么每个线程可以访问自己内部的副本变量。
+
+    /**
+     * 线程本地变量，ThreadLocal为变量在每个线程中都创建了一个副本，
+     * 那么每个线程可以访问自己内部的副本变量。
+     */
     private final ThreadLocal<ReentrantState> currentLock = new ThreadLocal<ReentrantState>();
 
     private ZkClient client;
@@ -133,6 +137,8 @@ public class SimpleLock implements Lock {
             lockListener.addQueue(seq, bs);
             boolean islock = false;
             boolean isException = false;
+
+            // 在这里阻塞了其他的线程
             try {
                 if (timeout >= 1) {
                     islock = lockObj.tryAcquire(timeout, TimeUnit.MILLISECONDS);
@@ -151,6 +157,7 @@ public class SimpleLock implements Lock {
                 }
             }
         } else {
+            // 重入锁
             state.add();
         }
         return false;

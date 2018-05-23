@@ -29,7 +29,7 @@ public class LockTest {
                 System.out.println("1-1--------unlock");
                 lock.unlock();
             }
-        }).start();
+        },"Thread-1").start();
         Thread.sleep(1000);
         new Thread(new Runnable() {
             @Override
@@ -45,7 +45,6 @@ public class LockTest {
                 }
                 lock.unlock();
             }
-        }).start();
-        Thread.sleep(100000);
+        },"Thread-3").start();
     }
 }
