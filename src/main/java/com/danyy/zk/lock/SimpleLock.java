@@ -16,7 +16,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class SimpleLock implements Lock {
     private final static Logger LOGGER = LoggerFactory.getLogger(SimpleLock.class);
+    // 线程本地变量，ThreadLocal为变量在每个线程中都创建了一个副本，那么每个线程可以访问自己内部的副本变量。
     private final ThreadLocal<ReentrantState> currentLock = new ThreadLocal<ReentrantState>();
+
     private ZkClient client;
     // 锁的目录
     private String lockPath = "/a";
@@ -73,6 +75,7 @@ public class SimpleLock implements Lock {
         client.listenState(Watcher.Event.KeeperState.Expired, new StateListener() {
             @Override
             public void listen(Watcher.Event.KeeperState state) {
+                // 当znode超期时，中断所有等待的线程
                 lockListener.interrupt();
             }
         });
@@ -98,15 +101,35 @@ public class SimpleLock implements Lock {
      */
     @Override
     public boolean lock(long timeout) {
+        // 获取当前线程中threadLocal变量的值
+        // 此ReentrantState为自己所写的关于锁的状态
         ReentrantState state = currentLock.get();
         if (state == null) {
+            // 可以理解为第一次加锁，为当前线程初始化一个ReentrantState
+
+            // 初始化Semaphore，并设置信号量为0
             final Semaphore lockObj = new Semaphore(0);
             BoundSemaphore bs = new BoundSemaphore(Thread.currentThread(), lockObj);
+            /**
+             * 创建的是临时顺序节点
+             * 如 seqPath为/lock/1，则创建的临时顺序节点为
+             * /lock/10000000000
+             * /lock/10000000001
+             * /lock/10000000002
+             *
+             * 返回的是：新添加的znode的路径
+             */
             String newPath = this.client.create(this.seqPath, "".getBytes(), CreateMode.EPHEMERAL_SEQUENTIAL);
+            // 保存其锁重入状态
             state = new ReentrantState(newPath);
+            // 添加都threadLocal中
             currentLock.set(state);
+
             String[] paths = newPath.split("/");
+            // 即seq为10000000000
             final String seq = paths[paths.length - 1];
+
+            // 加入等待队列
             lockListener.addQueue(seq, bs);
             boolean islock = false;
             boolean isException = false;

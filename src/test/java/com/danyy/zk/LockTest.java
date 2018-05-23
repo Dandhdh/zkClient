@@ -17,6 +17,7 @@ public class LockTest {
                 try {
                     Thread.sleep(2000);
                     lock.lock();
+                    // 重入锁
                     System.out.println("1---------re getLock");
                     Thread.sleep(3000);
                     lock.unlock();

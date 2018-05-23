@@ -13,11 +13,12 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Semaphore;
 
 /**
- * 锁的具体实现
+ * 锁的监听回调函数
  */
 public class LockListener implements Listener {
 
     private Map<String, BoundSemaphore> waitLocks = new ConcurrentHashMap<String, BoundSemaphore>();
+    // 在锁范围的所有znode的集合
     private ConcurrentSkipListMap<String, Boolean> totalLockNode = new ConcurrentSkipListMap<String, Boolean>(new NodeComparator<String>());
 
     public LockListener(List<String> nodes) {
